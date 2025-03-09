@@ -15,13 +15,17 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import Link from "next/link";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const formSchema = z
   .object({
-    username: z.string().min(2, "İsim en az 2 karakter olmalıdır."),
+    username: z.string().min(2, "İsim en az 2 karakter olmalidir."),
     email: z.string().email("Geçerli bir e-posta adresi girin."),
-    password: z.string().min(6, "Şifre en az 6 karakter olmalıdır."),
-    passwordConfirm: z.string().min(6, "Şifre en az 6 karakter olmalıdır."),
+    password: z.string().min(6, "Şifre en az 6 karakter olmalidir."),
+    passwordConfirm: z.string().min(6, "Şifre en az 6 karakter olmalidir."),
   })
   .refine((data) => data.password === data.passwordConfirm, {
     message: "Şifreler eşleşmiyor.",
@@ -29,6 +33,9 @@ const formSchema = z
   });
 
 const RegisterPage = () => {
+  const router = useRouter();
+  const [isLoading,setIsLoading]=useState(false);
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -39,8 +46,34 @@ const RegisterPage = () => {
     },
   });
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values);
+  const  onSubmit = async (values: z.infer<typeof formSchema>)=> {
+    setIsLoading(true)
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/auth/register/",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({
+          username:values.username,
+          password:values.password
+        }),
+      });
+      const data = await response.json();
+      console.log(values);
+
+      if (response.ok){
+        const token = data.accesToken;
+        if(token){
+          localStorage.setItem("accesToken",token)
+        }
+        toast.success("Kayit başarili, giriş sayfasına yönlendiriliyorsunuz");
+        router.push('/login')
+      }
+    } catch (error) {
+      console.error("Kayit sirasinda hata oluştu",error)
+      toast.error("Bir hata var, tekrar deneyiniz");
+    }finally{
+    setIsLoading(false)
+   };
   }
 
   return (
@@ -121,7 +154,7 @@ const RegisterPage = () => {
                 </FormItem>
               )}
             />
-            <Button variant="myButton" type="submit" className="w-full">
+            <Button disabled={isLoading} variant="myButton" type="submit" className="w-full">
               Üye Ol
             </Button>
           </form>
