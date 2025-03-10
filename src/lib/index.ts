@@ -38,7 +38,7 @@ export const NavMenu:{title:string; url:string ;icon: React.ComponentType}[]= [
 export const Category:{title:string;url:string; icon: React.ComponentType }[]=[
 
     {
-        title:"Tüm ürünlerimiz",
+        title:"Urunler",
         url:"/all",
         icon:FaTags
     },

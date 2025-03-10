@@ -25,6 +25,22 @@ const Navbar = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const router = useRouter();
   const [cartItems, setCartItems] = useState<CartItem[]>([]);
+  const [searchTerm,setSearchTerm]=useState("")
+
+
+
+  const handleSearch = ()=>{
+    if(searchTerm.trim()){
+      router.push(`/search/${encodeURIComponent(searchTerm)}`)
+      setSearchTerm("")
+    }
+  }
+    const handleKeyDown = (e)=>{
+    if(e.key === "Enter"){
+      handleSearch();
+      setSearchTerm("")
+    }
+  }
 
   useEffect(() => {
     const fetchCartItems = async () => {
@@ -78,8 +94,11 @@ const Navbar = () => {
           <Input
             className="border border-gray-300 m-0 w-[300px] pl-3 pr-10 h-10 rounded-2xl"
             placeholder="Bir şeyler ara..."
+            onChange={(e)=>setSearchTerm(e.target.value)}
+            onKeyDown={handleKeyDown}
           />
           <RiSearchLine
+          onClick={handleSearch}
             size={25}
             className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-900 text-lg"
           />
@@ -131,8 +150,11 @@ const Navbar = () => {
   <DropdownMenuTrigger asChild>
     <div className="flex items-center justify-center cursor-pointer">
       <FiShoppingCart size={34} />
+      {cartItems.length > 0 && (
+        <span className="bg-red-600 text-white rounded-full h-5 p-2 absolute top-2 right-7 flex items-center justify-center text-xs font-bold ">{cartItems.length}</span>
+      )}
       <div className="flex flex-col items-center justify-center">
-        <p>Sepetim</p>
+        <p className="text-xs">Sepetim</p>
       </div>
     </div>
   </DropdownMenuTrigger>

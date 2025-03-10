@@ -1,6 +1,6 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useDetailProducts } from "../../../../actions/getRooms";
 import Image from "next/image";
 import {
@@ -12,52 +12,56 @@ import Autoplay from "embla-carousel-autoplay";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
 import { CartItem } from "@/app/cart/page";
+import { useCart } from "@/app/context/cartContext";
 
 const Detailpage = () => {
   const params = useParams();
   const id = params.id;
   const { product, error, loading } = useDetailProducts(Number(id));
-  const [variant, setVariant] = useState<CartItem []>([]);
+  const [variant, setVariant] = useState<CartItem | null>(null); 
   const router = useRouter();
+  const { addToCart } = useCart(); 
 
   if (loading) return <p>Yükleniyor...</p>;
   if (error) return <p>Hata: {error}</p>;
   if (!product) return <p>Ürün Bulunamadi</p>;
 
-  // Varyant seçimi fonksiyonu
-  const handleVariantChange = (selectedVariant) => {
-    setVariant(selectedVariant); // Seçilen varyantı state'e kaydet
-  };
 
-  // Sepete ekleme fonksiyonu
-  const handleAddToCart = async (product_id:number, quantity:SVGAnimatedNumberList) => { 
+  const handleVariantChange = (selectedVariant: CartItem) => {
+    setVariant(selectedVariant); 
+
+  
+  const handleAddToCart = async () => {
     if (!variant) {
-      console.error("Varyant seçilmedi.");
-      toast.error("Lütfen bir varyant seçin.");
+      toast.error("Lütfen bir varyant seçin");
       return;
     }
-    const variant_id = variant.id;
+
+    // Sepete ekle
+    addToCart({
+      id: product.id,
+      product: { title: product.title, price: product.price },
+      quantity: 1, 
+    });
+
+    
     try {
       const response = await fetch('http://127.0.0.1:8000/api/cart/add/', {
         method: 'POST',
         headers: {
           "Content-Type": "application/json",
-          "Authorization": "Bearer " + localStorage.getItem("accessToken"),  // JWT Token ekle
+          "Authorization": "Bearer " + localStorage.getItem("accessToken"),
         },
         body: JSON.stringify({
-          product_id: product_id,
-          variant_id: variant_id,
-          quantity: quantity,
-         
+          product_id: product.id,
+          variant_id: variant.id, 
+          quantity: 1, 
         }),
       });
-      // console.log("Gönderilen product_id:", product.id);
-      // console.log("Gönderilen variant_id:", variant_id);
-      
 
-      if(response.ok) {
+      if (response.ok) {
         toast.success('Ürün sepete eklendi');
-        router.push('/cart')
+        router.push('/cart');
       } else {
         toast.error('Bir hata oluştu');
       }
@@ -70,13 +74,10 @@ const Detailpage = () => {
   return (
     <div className="mt-22">
       <div className="flex flex-row gap-5 p-3">
-        <Carousel
-          plugins={[Autoplay({ delay: 5000 })]}
-          className="w-full "
-        >
-          <CarouselContent className="flex mt-8 p-0 mr-0 ml-0 ">
+        <Carousel plugins={[Autoplay({ delay: 5000 })]} className="w-full">
+          <CarouselContent className="flex mt-8 p-0 mr-0 ml-0">
             {product.images.map((image, index) => (
-              <CarouselItem key={image.id} className="flex-shrink-0 w-full ">
+              <CarouselItem key={image.id} className="flex-shrink-0 w-full">
                 <div key={index} className="relative w-full h-[300px]">
                   <Image
                     src={image.image}
@@ -95,7 +96,7 @@ const Detailpage = () => {
             {product.title}
           </h2>
           <p className="text-xl mt-5 font-mono">
-            <span className="font-bold text-red-950">Özellikler: </span> 
+            <span className="font-bold text-red-950">Özellikler: </span>
             {product.description}
           </p>
           <p className="text-red-700 flex justify-end text-2xl font-bold mt-3">
@@ -107,19 +108,22 @@ const Detailpage = () => {
               {product.variants.map((variantOption) => (
                 <li
                   key={variantOption.id}
-                  className=" p-2 rounded-lg flex items-center gap-2"
-                  onClick={() => handleVariantChange(variantOption)} // Seçilen varyantı set et
+                  className="p-2 rounded-lg flex items-center gap-2"
+                  onClick={() => handleVariantChange(variantOption)}
                 >
                   <input
                     type="radio"
                     id={`variant-${variantOption.id}`}
-                    checked={variant?.id === variantOption.id} // Seçilen varyant id ile karşılaştır
+                    checked={variant?.id === variantOption.id} 
                     onChange={() => handleVariantChange(variantOption)}
                     className="cursor-pointer"
                   />
-                  <label htmlFor={`variant-${variantOption.id}`} className="cursor-pointer">
-                    <span className="font-medium">Renk:</span> {variantOption.color}, 
-                    <span className="font-medium">Beden: </span> {variantOption.size}
+                  <label
+                    htmlFor={`variant-${variantOption.id}`}
+                    className="cursor-pointer"
+                  >
+                    <span className="font-medium">Renk:</span> {variantOption.color},
+                    <span className="font-medium"> Beden: </span> {variantOption.size}
                   </label>
                 </li>
               ))}
@@ -133,7 +137,7 @@ const Detailpage = () => {
               Hemen Al
             </Button>
             <Button
-              onClick={() => handleAddToCart(product.id,1)} // Sepete eklerken ürün id ve miktar veriliyor
+              onClick={handleAddToCart} 
               className="w-[300px]"
               variant="myButton"
             >
@@ -145,5 +149,6 @@ const Detailpage = () => {
     </div>
   );
 };
+}
 
 export default Detailpage;

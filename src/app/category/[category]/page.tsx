@@ -19,12 +19,26 @@ const CategoryPage = () => {
   useEffect(() => {
     if (category) {
       const formattedCategory = Array.isArray(category) ? category[0] : category;
-      fetch(`http://127.0.0.1:8000/api/products/category/${formattedCategory}/`)
-        .then((res) => res.json())
-        .then((data) => {
-          setProducts(data);
-        })
-        .catch((error) => console.error("API Hatasi:", error));
+      const encodedCategory = encodeURIComponent(formattedCategory);
+      let apiUrl = `http://127.0.0.1:8000/api/products/category/${encodedCategory}/`;
+
+      if(encodedCategory === "all"){
+        apiUrl = "http://127.0.0.1:8000/api/products/"; 
+      }else if (encodedCategory.toLowerCase() === "brands"){
+        apiUrl = "http://127.0.0.1:8000/api/brands/";
+      }
+      fetch(apiUrl)
+      .then((res) => res.json())
+      .then((data) => {
+        if (encodedCategory.toLowerCase() === "brands") {
+          console.log(data.brands);  
+          setProducts(data.brands);  
+        } else {
+          console.log(data);  
+          setProducts(data);  
+        }
+      })
+      .catch((error) => console.error("API Hatasi:", error));
     }
   }, [category]);
 
