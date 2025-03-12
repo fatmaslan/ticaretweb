@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
 import Link from "next/link";
+import { useCart } from "../context/cartContext";
 
 interface ProductItemProps {
   item: {
@@ -20,35 +21,35 @@ interface ProductItemProps {
 }
 
 const ProductItems: React.FC<ProductItemProps> = ({ item }) => {
+  const {addToCart}=useCart();
   return (
-    <div className="mt-2 p-5 gap-4 flex flex-wrap justify-start"> 
-      <Link
-        href={`product/${item?.id}`}
-        className="w-[230px] h-[360px] shadow-xl flex flex-col"
-      >
-        <div className="relative w-[230px] h-[250px]">
-          {item.images.length > 0 ? (
-            <Image
-              key={item.images[0].id}
-              src={item.images[0].image}
-              alt={item.title}
-              fill
-              className="object-cover rounded-t-lg"
-            />
-          ) : (
-            <p>Bir resim bulunamadi</p>
-          )}
-        </div>
-        <div className="mt-1 text-center w-full px-3">
-          <h2 className="font-bold text-lg text-center">{item.title}</h2>
-          <p className="font-bold text-xl text-red-800 flex justify-end">
-            {item.price}₺
-          </p>
-          <Button variant="myButton" className="text-xl mt-3 h-8">
-            Sepete ekle
-          </Button>
-        </div>
-      </Link>
+    <div className="p-5 gap-4 flex flex-wrap justify-start">
+      <div className="w-[230px] h-[300px] flex flex-col shadow-xl rounded-lg">
+        <Link href={`product/${item?.id}`} className="flex flex-col h-full">
+          <div className="relative w-full h-[300px]">
+            {item.images.length > 0 ? (
+              <Image
+                key={item.images[0].id}
+                src={item.images[0].image}
+                alt={item.title}
+                fill
+                className="object-cover rounded-t-lg"
+              />
+            ) : (
+              <p className="flex items-center justify-center h-full text-gray-500">Resim bulunamadi</p>
+            )}
+          </div>
+
+          <div className="px-3 py-2 flex flex-col justify-between h-full">
+            <h2 className="font-bold text-lg text-center">{item.title}</h2>
+
+            <div className="mt-auto">
+              <p className="font-bold text-xl text-red-800 text-center">{item.price}₺</p>
+              <Button onClick={() => addToCart(item)} className="text-xl h-8 w-full mt-2 bg-red-500 text-white hover:bg-white hover:text-red-500 transition-all">Sepete ekle</Button>
+            </div>
+          </div>
+        </Link>
+      </div>
     </div>
   );
 };

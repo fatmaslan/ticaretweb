@@ -1,6 +1,6 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import React, { useState, useEffect } from "react";
+import React, { useState } from "react";
 import { useDetailProducts } from "../../../../actions/getRooms";
 import Image from "next/image";
 import {
@@ -11,40 +11,74 @@ import {
 import Autoplay from "embla-carousel-autoplay";
 import { Button } from "@/components/ui/button";
 import { toast } from "react-toastify";
-import { CartItem } from "@/app/cart/page";
 import { useCart } from "@/app/context/cartContext";
+
+
+export interface Product {
+  id: number;
+  title: string;
+  description: string;
+  images: { id: number; image: string }[];
+  color: string;
+  size: number;
+  price: number;
+  variants: Variant[];
+}
+
+ interface Variant {
+  id: number;
+  color: string;
+  size: string;
+  price: string;
+  stock: number;
+}
+
+
+interface CartItem {
+  id: number;
+  product: {
+    id: number;
+    title: string;
+    price: number;
+  };
+  quantity: number;
+}
+
 
 const Detailpage = () => {
   const params = useParams();
   const id = params.id;
   const { product, error, loading } = useDetailProducts(Number(id));
-  const [variant, setVariant] = useState<CartItem | null>(null); 
+  const [variant, setVariant] = useState<Variant | null>(null);  
   const router = useRouter();
-  const { addToCart } = useCart(); 
+  const { addToCart } = useCart();
 
   if (loading) return <p>Yükleniyor...</p>;
   if (error) return <p>Hata: {error}</p>;
   if (!product) return <p>Ürün Bulunamadi</p>;
 
+  const handleVariantChange = (selectedVariant: Variant) => {
+    setVariant(selectedVariant);  
+  };
 
-  const handleVariantChange = (selectedVariant: CartItem) => {
-    setVariant(selectedVariant); 
-
-  
   const handleAddToCart = async () => {
     if (!variant) {
       toast.error("Lütfen bir varyant seçin");
       return;
     }
 
-    // Sepete ekle
-    addToCart({
+    const cartItem: CartItem = {
       id: product.id,
-      product: { title: product.title, price: product.price },
+      product: {
+        id: product.id,
+        title: product.title,
+        price: product.price,
+      }, 
       quantity: 1, 
-    });
+    };
 
-    
+    addToCart(cartItem);  
+
     try {
       const response = await fetch('http://127.0.0.1:8000/api/cart/add/', {
         method: 'POST',
@@ -76,13 +110,13 @@ const Detailpage = () => {
       <div className="flex flex-row gap-5 p-3">
         <Carousel plugins={[Autoplay({ delay: 5000 })]} className="w-full">
           <CarouselContent className="flex mt-8 p-0 mr-0 ml-0">
-            {product.images.map((image, index) => (
+            {product.images.map((image) => (
               <CarouselItem key={image.id} className="flex-shrink-0 w-full">
-                <div key={index} className="relative w-full h-[300px]">
+                <div className="relative w-full h-[400px]">
                   <Image
                     src={image.image}
                     alt={product.title}
-                    layout="fill"
+                    fill
                     objectFit="cover"
                     className="rounded-2xl"
                   />
@@ -149,6 +183,5 @@ const Detailpage = () => {
     </div>
   );
 };
-}
 
 export default Detailpage;

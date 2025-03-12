@@ -6,6 +6,7 @@ import { CartProvider } from "./context/cartContext";
 
 
 
+
 export default function RootLayout({
   children,
 }: Readonly<{
@@ -19,6 +20,7 @@ export default function RootLayout({
         <div className='flex flex-col min-h-screen'> 
         {children}
         </div>
+
         <Footer/>
         </CartProvider>
       </body>
